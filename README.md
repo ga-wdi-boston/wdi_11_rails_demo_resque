@@ -11,17 +11,17 @@ OS X:
 
 Ubuntu
 
-    aptitude install redis
+    apt-get install redis
     redis-server
 
 In another tab start
 
-    redis-monitor
+    redis-cli monitor
 
 To create a job, simply create a module that will be loaded by Rails.
 
 ```ruby
-    module JobName
+    class JobName
       @queue = :default
 
       def self.perform
@@ -32,6 +32,18 @@ To create a job, simply create a module that will be loaded by Rails.
       end
     end
 ```
+
+Configure Resque to use the proper Redis connection by putting the following in `config/initializers/resque.rb`
+    
+    if ENV["REDISCLOUD_URL"]
+      uri = URI.parse(ENV["REDISCLOUD_URL"])
+      RedisClient = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
+    else
+      RedisClient = Redis.new(host: 'localhost')
+    end
+    
+    Resque.redis = RedisClient
+
 
 Then to queue up your code, run `Resque.enqueue(JobName)`
 
